@@ -19,6 +19,11 @@
     "section_options": "Options",
     "fields": {
       "title": "Title",
+      "visual_style": "Visual Style",
+      "bar_width": "Node Bar Width",
+      "show_percentages": "Show Percentages",
+      "show_entity_labels": "Show Entity Type Labels",
+      "label_text_color": "Label Text Color",
       "time_period_from": "Time period from",
       "time_period_to": "Time period to",
       "autoconfig": "Autoconfig",
@@ -77,6 +82,10 @@
       "auto": "Auto",
       "vertical": "Vertical",
       "horizontal": "Horizontal"
+    },
+    "visual_style": {
+      "default": "Default",
+      "sigenergy": "Sigenergy"
     }
   }
 }

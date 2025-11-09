@@ -13,7 +13,7 @@ import './entity';
 import { EntityConfigOrStr } from '../types';
 import { UNIT_PREFIXES } from '../const';
 
-@customElement('sankey-chart-editor')
+@customElement('sigen-sankey-editor')
 export class SankeyChartEditor extends LitElement implements LovelaceCardEditor {
   @property({ attribute: false }) public hass!: HomeAssistant;
   @property({ attribute: false }) public lovelace?: LovelaceConfig;
@@ -170,6 +170,28 @@ export class SankeyChartEditor extends LitElement implements LovelaceCardEditor 
       //   ],
       // },
       { name: 'title', selector: { text: {} } },
+      {
+        name: 'visual_style',
+        selector: {
+          select: {
+            mode: 'dropdown',
+            options: [
+              { value: 'default', label: localize('editor.visual_style.default') },
+              { value: 'sigenergy', label: localize('editor.visual_style.sigenergy') },
+            ],
+          },
+        },
+      },
+      {
+        type: 'grid',
+        name: '',
+        schema: [
+          { name: 'bar_width', selector: { number: { mode: 'box', unit_of_measurement: 'px', min: 15, max: 150 } } },
+          { name: 'show_percentages', selector: { boolean: {} } },
+          { name: 'show_entity_labels', selector: { boolean: {} } },
+          { name: 'label_text_color', selector: { text: {} } },
+        ],
+      },
       { name: 'energy_date_selection', selector: { boolean: {} } },
       {
         type: 'grid',

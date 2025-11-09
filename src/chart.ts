@@ -17,7 +17,7 @@ import { renderSection } from './section';
 import { shouldBeVertical } from './layout';
 import { reconcileEntity } from './reconcile';
 
-@customElement('sankey-chart-base')
+@customElement('sigen-sankey-base')
 export class Chart extends LitElement {
   // https://lit.dev/docs/components/properties/
   @property({ attribute: false }) public hass!: HomeAssistant;
@@ -381,6 +381,14 @@ export class Chart extends LitElement {
       if (!boxes.length) {
         return;
       }
+
+      // Calculate percentages for each box if show_percentages is enabled
+      if (this.config.show_percentages && total > 0) {
+        boxes.forEach(box => {
+          box.percentage = (box.state / total) * 100;
+        });
+      }
+
       // leave room for margin
       const availableHeight = sectionSize - (boxes.length - 1) * this.config.min_box_distance;
       // calc sizes to determine statePerPixel ratio and find the best one
@@ -637,14 +645,21 @@ export class Chart extends LitElement {
         wide: !!this.config.wide,
         'with-header': !!this.config.title,
         vertical: this.vertical,
+        'visual-style-sigenergy': this.config.visual_style === 'sigenergy',
       });
 
-      const height = this.vertical ? 'auto' : this.config.height + 'px';
+      // Calculate bar width and set CSS custom properties
+      const barWidth = this.config.bar_width || (this.config.visual_style === 'sigenergy' ? 70 : 15);
+      const containerStyle = {
+        height: this.vertical ? 'auto' : this.config.height + 'px',
+        '--sankey-bar-width': `${barWidth}px`,
+        '--sankey-label-text-color': this.config.label_text_color || '#ffffff',
+      };
 
       if (!Object.keys(this.states).length) {
         return html`
           <ha-card label="Sankey Chart" .header=${this.config.title}>
-            <div class=${containerClasses} style=${styleMap({ height: height })}>${localize('common.loading')}</div>
+            <div class=${containerClasses} style=${styleMap(containerStyle)}>${localize('common.loading')}</div>
           </ha-card>
         `;
       }
@@ -657,7 +672,7 @@ export class Chart extends LitElement {
 
       return html`
         <ha-card label="Sankey Chart" .header=${this.config.title}>
-          <div class=${containerClasses} style=${styleMap({ height: height })}>
+          <div class=${containerClasses} style=${styleMap(containerStyle)}>
             ${this.sections.map((s, i) =>
               renderSection({
                 locale: this.hass.locale,

@@ -187,6 +187,18 @@ export function normalizeConfig(conf: SankeyChartConfig, isMetric?: boolean): Co
     };
   }
 
+  // Apply Sigenergy defaults if visual_style is set
+  if (config.visual_style === 'sigenergy') {
+    config = {
+      bar_width: 70,
+      show_percentages: true,
+      show_entity_labels: true,
+      show_names: false, // Hide custom names in favor of entity labels
+      label_text_color: '#ffffff',
+      ...config, // User config overrides defaults
+    };
+  }
+
   const sections: Section[] = config.sections.map((section: SectionConfig) => ({
     ...section,
     entities: section.entities.map(entityConf =>

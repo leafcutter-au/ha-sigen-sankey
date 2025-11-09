@@ -3,7 +3,7 @@ import { customElement, property, query } from 'lit/decorators';
 import { HomeAssistant } from 'custom-card-helpers';
 import type { Config } from './types';
 
-@customElement('sankey-chart-print-config')
+@customElement('sigen-sankey-print-config')
 export class PrintConfig extends LitElement {
   public hass!: HomeAssistant;
   @property({ attribute: false }) public config!: Config;

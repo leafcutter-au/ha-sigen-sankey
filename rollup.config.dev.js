@@ -10,6 +10,7 @@ export default {
   output: {
     dir: "./dist",
     format: "es",
+    entryFileNames: 'sigen-sankey.js',
   },
   plugins: [
     resolve(),

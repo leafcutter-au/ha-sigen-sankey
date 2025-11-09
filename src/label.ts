@@ -15,6 +15,11 @@ export function renderLabel(
   const shouldShowLabel = box.config.type !== 'passthrough' && (show_names || show_states);
   if (!shouldShowLabel) return null;
 
+  // Route to Sigenergy-style rendering if configured
+  if (config.visual_style === 'sigenergy') {
+    return renderSigenergyLabel(box, config, formattedState, name);
+  }
+
   const maxLabelSize = box.size + spacerSize - 1;
 
   // reduce label size if it doesn't fit
@@ -70,4 +75,60 @@ export function renderLabel(
       ? html`${!vertical ? html`&nbsp;` : null}<span class="name" style=${styleMap(nameStyle)}>${!box.config.url ? html`${name}` : html`<a href="${box.config.url}" target="_blank">${name}</a>`}</span>`
       : null}
   </div>`;
+}
+
+/**
+ * Renders a Sigenergy-style label with entity type, value, and percentage overlaid on the bar
+ */
+function renderSigenergyLabel(
+  box: Box,
+  config: Config,
+  formattedState: string,
+  name: string,
+) {
+  const { show_units, show_percentages, show_entity_labels } = config;
+
+  // Determine entity type label
+  const entityType = getEntityTypeLabel(box.entity_id, name);
+
+  return html`<div class="label">
+    ${show_entity_labels ? html`<div class="entity-type">${entityType}</div>` : null}
+    ${config.show_states
+      ? html`<div>
+          <span class="state">${formattedState}</span>${show_units
+            ? html`<span class="unit">${box.unit_of_measurement}</span>`
+            : null}
+        </div>`
+      : null}
+    ${show_percentages && box.percentage !== undefined
+      ? html`<div class="percentage">${box.percentage.toFixed(2)}%</div>`
+      : null}
+  </div>`;
+}
+
+/**
+ * Extracts entity type label from entity_id or name
+ * Priority: short uppercase name → entity_id pattern → parsed name
+ * Returns uppercase single-word labels (SOLAR, BATTERY, LOAD, GRID, etc.)
+ */
+function getEntityTypeLabel(entityId: string, name: string): string {
+  // Priority 1: Use name if it's SHORT (single word, uppercase)
+  if (name && name.length <= 10 && name === name.toUpperCase()) {
+    return name;
+  }
+
+  // Priority 2: Extract from entity_id pattern like "sensor.solar_production"
+  const entityMatch = entityId.match(/\.([a-z_]+)/);
+  if (entityMatch) {
+    const extracted = entityMatch[1].replace(/_/g, ' ').toUpperCase();
+    // Take first word if multi-word
+    return extracted.split(' ')[0];
+  }
+
+  // Priority 3: Parse from name
+  if (name) {
+    return name.split(' ')[0].toUpperCase();
+  }
+
+  return 'ENTITY';
 }

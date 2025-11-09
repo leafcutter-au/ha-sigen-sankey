@@ -1,5 +1,5 @@
 {
-    "name": "Sankey Chart Card",
+    "name": "Sigen Sankey Chart",
     "render_readme": true,
-    "filename": "ha-sankey-chart.js"
+    "filename": "sigen-sankey.js"
 }

@@ -37,8 +37,8 @@ console.info(
 // This puts your card into the UI card picker dialog
 (window as any).customCards = (window as any).customCards || [];
 (window as any).customCards.push({
-  type: 'sankey-chart',
-  name: 'Sankey Chart',
+  type: 'sigen-sankey',
+  name: 'Sigen Sankey Chart',
   description: 'A card to display a sankey chart. For example for power or energy consumption',
   documentationURL: 'https://github.com/MindFreeze/ha-sankey-chart',
   // preview: true, // requires energy data
@@ -48,11 +48,11 @@ const ENERGY_DATA_TIMEOUT = 10000;
 
 type DeviceNode = { id: string; name?: string; parent?: string };
 
-@customElement('sankey-chart')
+@customElement('sigen-sankey')
 class SankeyChart extends SubscribeMixin(LitElement) {
   public static async getConfigElement(): Promise<LovelaceCardEditor> {
     // await import('./editor');
-    return document.createElement('sankey-chart-editor');
+    return document.createElement('sigen-sankey-editor');
   }
 
   public static getStubConfig(): Record<string, unknown> {
@@ -436,16 +436,16 @@ class SankeyChart extends SubscribeMixin(LitElement) {
     }
     const print_yaml = this.config.autoconfig?.print_yaml;
     return html`
-      <sankey-chart-base
+      <sigen-sankey-base
         .hass=${this.hass}
         .states=${Object.keys(this.states).length ? this.states : this.hass.states}
         .config=${this.config}
         .forceUpdateTs=${this.forceUpdateTs}
         .width=${this.clientWidth || this.offsetWidth || this.parentElement?.clientWidth || window.innerWidth}
-      ></sankey-chart-base>
+      ></sigen-sankey-base>
 
       ${print_yaml && this.config.sections.length
-        ? html`<sankey-chart-print-config .hass=${this.hass} .config=${this.config}></sankey-chart-print-config>`
+        ? html`<sigen-sankey-print-config .hass=${this.hass} .config=${this.config}></sigen-sankey-print-config>`
         : ''}
     `;
   }

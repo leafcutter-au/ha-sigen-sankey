@@ -7,7 +7,7 @@ import { localize } from '../localize/localize';
 import { repeat } from 'lit/directives/repeat';
 import { getEntityId } from '../utils';
 
-@customElement('sankey-chart-section-editor')
+@customElement('sigen-sankey-section-editor')
 class SankeyChartSectionEditor extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
   @property({ attribute: false }) public section!: SectionConfig;

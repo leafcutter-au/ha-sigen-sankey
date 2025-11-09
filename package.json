@@ -1,5 +1,5 @@
 {
-  "name": "ha-sankey-chart",
+  "name": "sigen-sankey",
   "version": "3.10.0",
   "description": "Lovelace sankey diagram card",
   "keywords": [
@@ -10,7 +10,7 @@
     "lovelace",
     "custom-cards"
   ],
-  "module": "ha-sankey-chart.js",
+  "module": "sigen-sankey.js",
   "repository": "git@github.com:MindFreeze/ha-sankey-chart.git",
   "author": "Ian Richardson <iantrich@gmail.com>",
   "license": "MIT",

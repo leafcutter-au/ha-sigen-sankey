@@ -65,7 +65,7 @@ const computeSchema = (entityConf: EntityConfig, icon: string) => [
     // },
 ];
 
-@customElement('sankey-chart-entity-editor')
+@customElement('sigen-sankey-entity-editor')
 class SankeyChartEntityEditor extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
   @property({ attribute: false }) public entity!: EntityConfigOrStr;

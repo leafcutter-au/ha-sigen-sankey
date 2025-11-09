@@ -10,7 +10,7 @@ import { HassEntity, HassServiceTarget } from 'home-assistant-js-websocket';
 import { UNIT_PREFIXES, CONVERSION_UNITS } from './const';
 
 export const DEFAULT_CONFIG: Config = {
-  type: 'custom:ha-sankey-chart',
+  type: 'custom:sigen-sankey',
   layout: 'auto',
   height: 200,
   unit_prefix: '',
@@ -23,6 +23,12 @@ export const DEFAULT_CONFIG: Config = {
   show_states: true,
   show_units: true,
   sections: [],
+  visual_style: 'default',
+  bar_width: 15,
+  show_percentages: false,
+  show_entity_labels: false,
+  label_text_color: '#ffffff',
+  label_background_opacity: 0,
 };
 
 export interface SankeyChartConfig extends LovelaceCardConfig {
@@ -60,11 +66,17 @@ export interface SankeyChartConfig extends LovelaceCardConfig {
   time_period_from?: string;
   time_period_to?: string;
   ignore_missing_entities?: boolean;
+  visual_style?: 'default' | 'sigenergy';
+  bar_width?: number;
+  show_percentages?: boolean;
+  show_entity_labels?: boolean;
+  label_text_color?: string;
+  label_background_opacity?: number;
 }
 
 declare global {
   interface HTMLElementTagNameMap {
-    'sankey-chart-editor': LovelaceCardEditor;
+    'sigen-sankey-editor': LovelaceCardEditor;
     'hui-error-card': LovelaceCard;
   }
 }
@@ -195,6 +207,7 @@ export interface Box {
     parents: Connection[];
   };
   connectedParentState: number;
+  percentage?: number;
 }
 
 export interface SectionState {

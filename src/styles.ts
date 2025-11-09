@@ -5,12 +5,14 @@ import { MIN_VERTICAL_SECTION_H } from './const';
 export default css`
     ha-card {
         overflow-x: auto;
+        width: 100%;
+        margin: 0;
     }
     .container {
         display: flex;
         position: relative;
         /* height: 210px; */
-        padding: 16px;
+        padding: 8px;
         overflow: hidden;
     }
     .container.with-header {
@@ -24,10 +26,14 @@ export default css`
         flex-direction: column;
         position: relative;
         min-width: 0;
-        max-width: 50%;
+        max-width: 100%;
     }
     .wide .section:last-child {
         flex: initial;
+    }
+    /* In Sigenergy mode, let last section expand since labels are on bars */
+    .visual-style-sigenergy.wide .section:last-child {
+        flex: 1;
     }
     .vertical .section {
         display: flex;
@@ -50,7 +56,7 @@ export default css`
     .box {
         display: flex;
         align-items: center;
-        /* position: relative; */
+        position: relative;
         /* min-height: 1px; */
         transition: height 0.25s;
     }
@@ -75,13 +81,17 @@ export default css`
         align-items: center;
         overflow: hidden;
         background-color: var(--primary-color);
-        width: 15px;
+        width: var(--sankey-bar-width, 15px);
         height: 100%;
         cursor: pointer;
+        border-radius: 3px;
+    }
+    .visual-style-sigenergy .box div:first-child {
+        border-radius: 8px;
     }
     .vertical .box div:first-child {
         width: 100%;
-        height: 15px;
+        height: var(--sankey-bar-width, 15px);
     }
     .box.type-passthrough div:first-child {
         opacity: 0.4;
@@ -117,13 +127,13 @@ export default css`
     .connectors {
         position: absolute;
         top: 0;
-        left: 15px;
+        left: var(--sankey-bar-width, 15px);
         right: 0;
         height: 100%;
         overflow: hidden;
     }
     .vertical .connectors {
-        top: 15px;
+        top: var(--sankey-bar-width, 15px);
         left: 0;
         bottom: 0;
         height: auto;
@@ -139,5 +149,79 @@ export default css`
         left: 0;
         width: 100%;
         height: 101%;
+    }
+
+    /* Sigenergy-style label overlay */
+    .visual-style-sigenergy .box .label {
+        position: absolute;
+        left: 0;
+        top: 5px;
+        right: auto;
+        width: var(--sankey-bar-width, 70px);
+        height: auto;
+        min-height: 60px;
+        padding: 8px 4px;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        text-align: center;
+        white-space: normal;
+        overflow: visible;
+        z-index: 10;
+        pointer-events: none;
+    }
+
+    .visual-style-sigenergy.vertical .box .label {
+        width: 100%;
+        height: var(--sankey-bar-width, 65px);
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: auto;
+        padding: 4px 8px;
+    }
+
+    .visual-style-sigenergy .box .label .entity-type {
+        font-size: 11px;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+        
+        width: 60px;
+        min-width: 60px;
+        max-width: 60px;
+        padding: 4px 2px;
+
+        color: var(--sankey-label-text-color, #ffffff);
+        background-color: rgba(255, 255, 255, 0.4);
+        border-radius: 8px;
+
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        box-sizing: border-box;
+    }
+
+    .visual-style-sigenergy .box .label .state {
+        font-size: 15px;
+        font-weight: bold;
+        color: var(--sankey-label-text-color, #ffffff);
+    }
+
+    .visual-style-sigenergy .box .label .unit {
+        font-size: 11px;
+        color: var(--sankey-label-text-color, #ffffff);
+        margin-left: 2px;
+    }
+
+    .visual-style-sigenergy .box .label .percentage {
+        font-size: 11px;
+        margin-top: 4px;
+        color: var(--sankey-label-text-color, #ffffff);
+    }
+
+    .visual-style-sigenergy .box .label .name {
+        display: none; /* Hide custom names in Sigenergy mode */
     }
 `;

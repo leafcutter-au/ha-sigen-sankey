@@ -20,12 +20,17 @@ Install through [HACS](https://hacs.xyz/)
 
 | Name              | Type    | Default             | Description                                 |
 | ----------------- | ------- | ------------------- | ------------------------------------------- |
-| type              | string  |                     | `custom:sankey-chart`
+| type              | string  |                     | `custom:sigen-sankey`
 | autoconfig        | object  |                     | Experimental. See [autoconfig](#autoconfig)
 | sections          | list    |                     | Required unless using autoconfig. Entities to show divided by sections, see [sections object](#sections-object) for additional options.
 | layout            | string  | auto                | Valid options are: 'horizontal' - flow left to right, 'vertical' - flow top to bottom & 'auto' - determine based on available space (based on the section->`min_witdh` option, which defaults to 150)
 | energy_date_selection | boolean | false           | Integrate with the Energy Dashboard. Filters data based on the [energy-date-selection](https://www.home-assistant.io/dashboards/energy/) card. Use this only for accumulated data sensors (energy/water/gas) and with a `type:energy-date-selection` card. You still need to specify all your entities as HA doesn't know exactly how to connect them but you can use the general kWh entities that you have in the energy dashboard. In the future we may use areas to auto configure the chart. Not compatible with `time_period`
 | title             | string  |                     | Optional header title for the card
+| visual_style      | string  | default             | Visual rendering mode. Valid options are: 'default' - traditional thin bars with side labels, 'sigenergy' - wide bars with overlaid labels, percentages, and entity type labels. See [Visual Styles](#visual-styles)
+| bar_width         | number  | 15 (default), 70 (sigenergy) | Width of node bars in pixels. Range: 15-150px
+| show_percentages  | boolean | false (default), true (sigenergy) | Display percentage of section total on each entity box
+| show_entity_labels| boolean | false (default), true (sigenergy) | Display entity type labels (SOLAR, BATTERY, LOAD, GRID, etc.) on bars. Auto-extracted from entity_id or name
+| label_text_color  | string  | #ffffff             | Color for text labels when using Sigenergy style with overlaid labels
 | unit_prefix       | string  |                     | Metric prefix for the unit of measurment. See <https://en.wikipedia.org/wiki/Unit_prefix> . Supported values are m, k, M, G, T, and 'auto'. When 'auto' is used, the appropriate prefix is chosen automatically for each value based on its magnitude (m for values <1, k for values >=1000, etc.)
 | round             | number  | 0                   | Round the value to at most N decimal places. May not apply to near zero values, see issue [#29](https://github.com/MindFreeze/ha-sankey-chart/issues/29)
 | height            | number  | 200                 | The height of the card in pixels. Only matters while in horizontal layout. Vertical layout height is dynamic based on content
@@ -133,7 +138,7 @@ This card supports automatic configuration generation based on the HA energy das
 
 ```yaml
 - type: energy-date-selection # you can put this anywhere you want but it is required for energy dashboard integration
-- type: custom:sankey-chart
+- type: custom:sigen-sankey
   # ...any other options
   autoconfig:
     print_yaml: false # optional
@@ -143,7 +148,7 @@ This card supports automatic configuration generation based on the HA energy das
 or like this:
 
 ```yaml
-- type: custom:sankey-chart
+- type: custom:sigen-sankey
   autoconfig: true
   time_period_from: "now/d" # today
 ```
@@ -180,13 +185,13 @@ If `time_period_to` is not specified, it defaults to `now`.
 Example configurations:
 
 ```yaml
-type: custom:sankey-chart
+type: custom:sigen-sankey
 title: Last 7 days up to the current moment
 time_period_from: "now-7d"
 ```
 
 ```yaml
-type: custom:sankey-chart
+type: custom:sigen-sankey
 title: Yesterday
 time_period_from: "now-1d/d"
 time_period_to: "now/d"
@@ -200,7 +205,7 @@ time_period_to: "now/d"
 ![Simple example card](img/example-simple.png)
 
 ```yaml
-- type: custom:sankey-chart
+- type: custom:sigen-sankey
   show_names: true
   sections:
     - entities:
@@ -218,7 +223,7 @@ time_period_to: "now/d"
 ![Energy example card](img/example-energy.png)
 
 ```yaml
-- type: custom:sankey-chart
+- type: custom:sigen-sankey
   show_names: true
   unit_prefix: k
   round: 1
@@ -270,7 +275,7 @@ time_period_to: "now/d"
 Example config where the state of the children must not exceed their parent. `reconcile_to: max` means to take the bigger of the two values. In other words, if the sum of the children is more than the state of the parent, the parent state will be set to the sum of its children within the card. `reconcile_to: min` would do the opposite and reduce the state of the children so they fully fit within the parent. `latest` just takes whichever value was updated last.
 
 ```yaml
-- type: custom:sankey-chart
+- type: custom:sigen-sankey
   show_names: true
   sections:
     - entities:
@@ -284,6 +289,128 @@ Example config where the state of the children must not exceed their parent. `re
     - entities:
       - sensor.washing_machine_power
       - sensor.other_power
+```
+
+## Visual Styles
+
+This card supports two visual rendering modes: **default** and **sigenergy**.
+
+### Default Style
+
+The traditional rendering with thin (15px) node bars and labels positioned beside (horizontal) or below (vertical) the bars.
+
+### Sigenergy Style
+
+An energy-focused visual mode designed for displaying solar, battery, grid, and load flows with:
+- **Wide node bars** (70-80px) as the primary visual element
+- **Overlaid labels** directly on colored bars with white text
+- **Entity type labels** (SOLAR, BATTERY, LOAD, GRID) automatically extracted from entity names or IDs
+- **Percentage displays** showing each entity's proportion of the section total
+- **Optimized for energy visualization** with high contrast and clear hierarchical information
+
+#### Sigenergy Style Example
+
+```yaml
+type: custom:sigen-sankey
+visual_style: sigenergy
+bar_width: 70
+show_percentages: true
+show_entity_labels: true
+label_text_color: '#ffffff'
+show_states: true
+show_units: true
+unit_prefix: k
+round: 2
+height: 400
+sections:
+  - entities:
+      - entity_id: sensor.solar_production
+        name: SOLAR
+        color: '#7fb842'
+        children:
+          - sensor.battery_charging
+          - sensor.grid_export
+          - sensor.home_consumption
+  - entities:
+      - entity_id: sensor.battery_charging
+        name: BATTERY
+        color: '#4db8a8'
+      - entity_id: sensor.grid_export
+        name: GRID
+        color: '#2e4057'
+      - entity_id: sensor.home_consumption
+        name: LOAD
+        color: '#9b59b6'
+        children:
+          - sensor.room1_consumption
+          - sensor.room2_consumption
+  - entities:
+      - entity_id: sensor.room1_consumption
+        name: ROOM 1
+        color: '#e74c3c'
+      - entity_id: sensor.room2_consumption
+        name: ROOM 2
+        color: '#3498db'
+```
+
+#### Sigenergy with Energy Dashboard Integration
+
+```yaml
+type: energy-date-selection
+---
+type: custom:sigen-sankey
+visual_style: sigenergy
+energy_date_selection: true
+unit_prefix: k
+round: 1
+sections:
+  - entities:
+      - entity_id: sensor.solar_energy
+        name: SOLAR
+        color: '#7fb842'
+        children:
+          - sensor.battery_in
+          - sensor.grid_export
+          - sensor.total_consumption
+      - entity_id: sensor.grid_import
+        name: GRID
+        color: '#2e4057'
+        children:
+          - sensor.total_consumption
+  - entities:
+      - entity_id: sensor.battery_in
+        name: BATTERY
+        color: '#4db8a8'
+      - entity_id: sensor.grid_export
+        name: EXPORT
+        color: '#95a5a6'
+      - entity_id: sensor.total_consumption
+        name: LOAD
+        color: '#9b59b6'
+```
+
+#### Customizing Entity Type Labels
+
+Entity type labels are automatically extracted in this priority order:
+1. If `name` is SHORT (≤10 chars) and UPPERCASE, it's used as-is
+2. Extracted from `entity_id` (e.g., `sensor.solar_production` → "SOLAR")
+3. First word of `name` uppercased
+
+**Tips:**
+- Set `name: SOLAR` to display "SOLAR"
+- Set `name: Battery Storage` to display "BATTERY"
+- Entity `sensor.solar_production` automatically displays "SOLAR"
+- Use `show_entity_labels: false` to hide type labels while keeping percentages
+
+#### Hybrid Configuration
+
+You can enable Sigenergy features individually in default mode:
+
+```yaml
+type: custom:sigen-sankey
+visual_style: default  # Keep traditional layout
+show_percentages: true  # But add percentages
+bar_width: 30  # And slightly wider bars
 ```
 
 You can find more examples and help in the HA forum <https://community.home-assistant.io/t/anyone-using-the-sankey-chart-card/423125>
@@ -333,11 +460,11 @@ Currently this chart just shows historical data based on a energy-date-selection
 1. `npm i`
 2. `npm start`
 3. The compiled `.js` file will be accessible on
-   `http://127.0.0.1:3000/ha-sankey-chart.js`.
+   `http://127.0.0.1:3000/sigen-sankey.js`.
 4. On a running Home Assistant installation add this to your Lovelace `resources:`
 
 ```yaml
-- url: 'http://127.0.0.1:3000/ha-sankey-chart.js'
+- url: 'http://127.0.0.1:3000/sigen-sankey.js'
   type: module
 ```
 
