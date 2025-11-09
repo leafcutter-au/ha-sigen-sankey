@@ -32,9 +32,7 @@ export default css`
         flex: initial;
     }
     /* In Sigenergy mode, let last section expand since labels are on bars */
-    .visual-style-sigenergy.wide .section:last-child {
-        flex: 1;
-    }
+
     .vertical .section {
         display: flex;
         flex: initial;
@@ -155,18 +153,13 @@ export default css`
     .visual-style-sigenergy .box .label {
         position: absolute;
         left: 0;
-        top: 5px;
-        right: auto;
+        top: 8px;
         width: var(--sankey-bar-width, 70px);
-        height: auto;
-        min-height: 60px;
-        padding: 8px 4px;
+        padding: 0 4px;
+        box-sizing: border-box;
+        display: flex;
         flex-direction: column;
-        justify-content: flex-start;
-        align-items: center;
-        text-align: center;
-        white-space: normal;
-        overflow: visible;
+        align-items: stretch;
         z-index: 10;
         pointer-events: none;
     }
@@ -186,23 +179,27 @@ export default css`
         font-weight: bold;
         letter-spacing: 0.5px;
         text-transform: uppercase;
-        margin-bottom: 4px;
-        
+        margin-bottom: 8px;
+        align-self: center;
         width: 60px;
-        min-width: 60px;
-        max-width: 60px;
-        padding: 4px 2px;
-
+        height: 24px;
+        line-height: 24px;
+        padding: 0 2px;
         color: var(--sankey-label-text-color, #ffffff);
         background-color: rgba(255, 255, 255, 0.4);
         border-radius: 8px;
-
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
         box-sizing: border-box;
+        text-align: center;
     }
 
+    .visual-style-sigenergy .box .label .values {
+        text-align: left;
+        padding-left: 8px;
+    }
+        
     .visual-style-sigenergy .box .label .state {
         font-size: 15px;
         font-weight: bold;
@@ -212,7 +209,13 @@ export default css`
     .visual-style-sigenergy .box .label .unit {
         font-size: 11px;
         color: var(--sankey-label-text-color, #ffffff);
-        margin-left: 2px;
+        /* This margin applies when it's a span (inline) next to the state */
+        margin-left: 4px;
+    }
+
+    /* When the unit is a div (block), it's on a new line, so remove the margin */
+    .visual-style-sigenergy .box .label div.unit {
+        margin-left: 0;
     }
 
     .visual-style-sigenergy .box .label .percentage {

@@ -86,23 +86,34 @@ function renderSigenergyLabel(
   formattedState: string,
   name: string,
 ) {
-  const { show_units, show_percentages, show_entity_labels } = config;
+  const { show_units, show_percentages, show_entity_labels, min_box_size } = config;
 
   // Determine entity type label
   const entityType = getEntityTypeLabel(box.entity_id, name);
 
+  // Determine if the percentage should be shown.
+  const isAtMinSize = box.size === min_box_size;
+  const shouldShowPercentage = show_percentages && box.percentage !== undefined && !isAtMinSize;
+
+  // Conditionally render the unit as a <div> (new line) or <span> (same line)
+  const unitTemplate = show_units
+    ? isAtMinSize
+      ? html`<span class="unit">${box.unit_of_measurement}</span>`
+      : html`<div class="unit">${box.unit_of_measurement}</div>`
+    : null;
+
   return html`<div class="label">
     ${show_entity_labels ? html`<div class="entity-type">${entityType}</div>` : null}
-    ${config.show_states
-      ? html`<div>
-          <span class="state">${formattedState}</span>${show_units
-            ? html`<span class="unit">${box.unit_of_measurement}</span>`
-            : null}
-        </div>`
-      : null}
-    ${show_percentages && box.percentage !== undefined
-      ? html`<div class="percentage">${box.percentage.toFixed(2)}%</div>`
-      : null}
+    <div class="values">
+      ${config.show_states
+        ? html`
+            <span class="state">${formattedState}</span>${unitTemplate}
+          `
+        : null}
+      ${shouldShowPercentage
+        ? html`<div class="percentage">${box.percentage!.toFixed(2)}%</div>`
+        : null}
+    </div>
   </div>`;
 }
 
