@@ -31,6 +31,9 @@ Install through [HACS](https://hacs.xyz/)
 | show_percentages  | boolean | false (default), true (sigenergy) | Display percentage of section total on each entity box
 | show_entity_labels| boolean | false (default), true (sigenergy) | Display entity type labels (SOLAR, BATTERY, LOAD, GRID, etc.) on bars. Auto-extracted from entity_id or name
 | label_text_color  | string  | #ffffff             | Color for text labels when using Sigenergy style with overlaid labels
+| base_box_size     | number  | 13.4% of `height`   | Sigenergy style: height every box gets before the rest of its section is shared out by value, as in the Sigenergy app. Each section fills the full height; `min_box_size` still acts as a floor
+| flow_opacity      | number  | 0.4 (default), 0.75 (sigenergy) | Opacity of the flows between boxes
+| font_family       | string  | Poppins (sigenergy) | Sigenergy style font. Poppins is loaded from Google Fonts unless you give another font here
 | unit_prefix       | string  |                     | Metric prefix for the unit of measurment. See <https://en.wikipedia.org/wiki/Unit_prefix> . Supported values are m, k, M, G, T, and 'auto'. When 'auto' is used, the appropriate prefix is chosen automatically for each value based on its magnitude (m for values <1, k for values >=1000, etc.)
 | round             | number  | 0                   | Round the value to at most N decimal places. May not apply to near zero values, see issue [#29](https://github.com/MindFreeze/ha-sankey-chart/issues/29)
 | height            | number  | 200                 | The height of the card in pixels. Only matters while in horizontal layout. Vertical layout height is dynamic based on content
@@ -78,6 +81,7 @@ Install through [HACS](https://hacs.xyz/)
 | icon              | string  | **Optional** | entity icon from HA | Custom icon for this entity
 | unit_of_measurement| string  | **Optional** | unit_of_measurement from HA | Custom unit_of_measurement for this entity. Useful when using attribute. If it contains a unit prefix, that must be in latin. Ex GВт, not ГВт
 | color             | string  | **Optional** | var(--primary-color)| Color of the box. Example values: 'red', '#FFAA2C', 'rgb(255, 170, 44)', 'random' (assigns a random RGB color)
+| badge_color       | string  | **Optional** | color of the first box with the same label | Sigenergy style: base colour of the entity type badge (hex). By default a right-hand BATTERY badge takes the left-hand BATTERY colour, as in the app
 | color_on_state    | boolean | **Optional** | false               | Color the box based on state value
 | color_limit       | string  | **Optional** | 1                   | State value for coloring the box based on state value
 | color_above       | string  | **Optional** | var(--state-icon-color)| Color for state value above color_limit

@@ -16,6 +16,21 @@ import { filterConfigByZoomEntity } from './zoom';
 import { renderSection } from './section';
 import { shouldBeVertical } from './layout';
 import { reconcileEntity } from './reconcile';
+import { SIGENERGY_BASE_BOX_RATIO, SIGENERGY_REF_BOX_WIDTH } from './const';
+import { getEntityTypeLabel } from './label';
+
+// The Sigenergy app uses Poppins; HA's own font is the fallback
+const SIGENERGY_FONT_FAMILY = "Poppins, var(--paper-font-body1_-_font-family, Roboto), sans-serif";
+function loadSigenergyFont() {
+  if (document.getElementById('sigen-sankey-font')) {
+    return;
+  }
+  const link = document.createElement('link');
+  link.id = 'sigen-sankey-font';
+  link.rel = 'stylesheet';
+  link.href = 'https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap';
+  document.head.appendChild(link);
+}
 
 @customElement('sigen-sankey-base')
 export class Chart extends LitElement {
@@ -143,6 +158,75 @@ export class Chart extends LitElement {
       c.calculating = false;
     });
     this.connections.forEach(c => this._calcConnection(c, accountedIn, accountedOut));
+    if (this.config.visual_style === 'sigenergy') {
+      this._completeConnections();
+    }
+  }
+
+  /**
+   * The allocation above is greedy: parents give to children in config order and never take it back,
+   * so a box can be left partly unconnected even when its state could be routed another way
+   * (e.g. solar fills the battery, then nothing is left for export that the battery could have covered).
+   * The Sigenergy app never leaves a box unconnected, so move flow along augmenting paths
+   * (parent -> child -> other parent of that child -> ...) until no unallocated state can be placed.
+   */
+  private _completeConnections() {
+    const simple = this.connections.filter(
+      c =>
+        !c.passthroughs.length &&
+        c.parent.type === 'entity' &&
+        c.child.type === 'entity' &&
+        !c.parent.children.some(ch => typeof ch === 'object' && ch.entity_id === c.child.entity_id && ch.connection_entity_id),
+    );
+    const eps = 1e-9;
+    const used = (ent: EntityConfigInternal, side: 'parent' | 'child') =>
+      simple.filter(c => c[side] === ent).reduce((sum, c) => sum + c.state, 0);
+    const free = (ent: EntityConfigInternal, side: 'parent' | 'child') =>
+      (this._getMemoizedState(ent).state ?? 0) - used(ent, side);
+    for (let guard = 0; guard < 100; guard++) {
+      // breadth-first search from parents with state left to children with room left
+      const starts = [...new Set(simple.map(c => c.parent))].filter(p => free(p, 'parent') > eps);
+      const via = new Map<EntityConfigInternal, { conn: ConnectionState; forward: boolean }>();
+      const seen = new Set<EntityConfigInternal>(starts);
+      const queue = [...starts];
+      let end: EntityConfigInternal | undefined;
+      while (queue.length && !end) {
+        const node = queue.shift()!;
+        const isParent = simple.some(c => c.parent === node) && !via.get(node)?.forward;
+        const edges = isParent
+          ? simple.filter(c => c.parent === node).map(conn => ({ conn, next: conn.child, forward: true }))
+          : simple.filter(c => c.child === node && c.state > eps).map(conn => ({ conn, next: conn.parent, forward: false }));
+        for (const { conn, next, forward } of edges) {
+          if (seen.has(next)) {
+            continue;
+          }
+          seen.add(next);
+          via.set(next, { conn, forward });
+          if (forward && free(next, 'child') > eps) {
+            end = next;
+            break;
+          }
+          queue.push(next);
+        }
+      }
+      if (!end) {
+        break;
+      }
+      // walk back to the start, collecting the path and its bottleneck
+      const path: { conn: ConnectionState; forward: boolean }[] = [];
+      let node = end;
+      while (via.has(node)) {
+        const step = via.get(node)!;
+        path.push(step);
+        node = step.forward ? step.conn.parent : step.conn.child;
+      }
+      let amount = Math.min(free(node, 'parent'), free(end, 'child'));
+      path.filter(step => !step.forward).forEach(step => (amount = Math.min(amount, step.conn.state)));
+      if (amount <= eps) {
+        break;
+      }
+      path.forEach(step => (step.conn.state += step.forward ? amount : -amount));
+    }
   }
 
   private _calcConnection(
@@ -410,7 +494,10 @@ export class Chart extends LitElement {
       // calc sizes again with the best statePerPixel
       let totalSize = 0;
       let sizedBoxes = sectionState.boxes;
-      if (sectionState.statePerPixel !== this.statePerPixel) {
+      if (this.config.visual_style === 'sigenergy' && !this.vertical) {
+        sizedBoxes = this._calcSigenergyBoxSizes(sizedBoxes, sectionState.size);
+        totalSize = sizedBoxes.reduce((sum, b) => sum + b.size, 0);
+      } else if (sectionState.statePerPixel !== this.statePerPixel) {
         sizedBoxes = sizedBoxes.map(box => {
           const size = Math.max(this.config.min_box_size, Math.floor(box.state / this.statePerPixel));
           totalSize += size;
@@ -441,6 +528,48 @@ export class Chart extends LitElement {
         spacerSize,
       };
     });
+
+    if (this.config.visual_style === 'sigenergy') {
+      // badges take the colour of the first box of the same type, like the app's right-hand BATTERY and GRID
+      const typeColors = new Map<string, string>();
+      this.sections.forEach(section =>
+        section.boxes.forEach(box => {
+          const type = getEntityTypeLabel(box.entity_id, box.config.name || box.entity.attributes.friendly_name || '');
+          if (!typeColors.has(type)) {
+            typeColors.set(type, box.color);
+          }
+          box.badgeColor = box.config.badge_color || typeColors.get(type);
+        }),
+      );
+    }
+  }
+
+  /**
+   * Sigenergy app sizing: each section fills its full height on its own scale.
+   * Every box gets the same base size (room for its label) plus a share of the
+   * remaining space proportional to its state. min_box_size still acts as a floor.
+   */
+  private _calcSigenergyBoxSizes(boxes: Box[], sectionSize: number): Box[] {
+    const { min_box_distance, min_box_size } = this.config;
+    const available = sectionSize - (boxes.length - 1) * min_box_distance;
+    const base = Math.min(
+      this.config.base_box_size ?? Math.round(this.config.height * SIGENERGY_BASE_BOX_RATIO),
+      available / boxes.length,
+    );
+    const floored = new Set<Box>();
+    let sizes = new Map<Box, number>();
+    for (;;) {
+      const free = boxes.filter(b => !floored.has(b));
+      const freeSpace = available - floored.size * min_box_size - free.length * base;
+      const freeState = free.reduce((sum, b) => sum + b.state, 0);
+      sizes = new Map(boxes.map(b => [b, floored.has(b) ? min_box_size : base + (freeSpace * b.state) / freeState]));
+      const under = free.filter(b => sizes.get(b)! < min_box_size);
+      if (!under.length || under.length === free.length) {
+        break;
+      }
+      under.forEach(b => floored.add(b));
+    }
+    return boxes.map(box => ({ ...box, size: sizes.get(box)! }));
   }
 
   private _calcBoxHeights(
@@ -650,11 +779,18 @@ export class Chart extends LitElement {
 
       // Calculate bar width and set CSS custom properties
       const barWidth = this.config.bar_width || (this.config.visual_style === 'sigenergy' ? 70 : 15);
-      const containerStyle = {
+      const containerStyle: Record<string, string> = {
         height: this.vertical ? 'auto' : this.config.height + 'px',
         '--sankey-bar-width': `${barWidth}px`,
         '--sankey-label-text-color': this.config.label_text_color || '#ffffff',
       };
+      if (this.config.visual_style === 'sigenergy') {
+        containerStyle['--sankey-box-radius'] = `${(barWidth / SIGENERGY_REF_BOX_WIDTH) * 8}px`;
+        containerStyle['--sankey-font-family'] = this.config.font_family || SIGENERGY_FONT_FAMILY;
+        if (!this.config.font_family) {
+          loadSigenergyFont();
+        }
+      }
 
       if (!Object.keys(this.states).length) {
         return html`

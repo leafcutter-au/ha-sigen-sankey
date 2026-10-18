@@ -132,6 +132,8 @@ export function getChildConnections(
   children: Box[],
   allConnections: ConnectionState[],
   connectionsByParent: Map<EntityConfigInternal, ConnectionState[]>,
+  // when given, ribbon ends are sized against the connected totals so they fill both boxes
+  fillTotals?: { parent: number; child: (child: Box) => number },
 ): Connection[] {
   // @NOTE don't take prevParentState from connection because it is different
   let prevParentState = 0;
@@ -152,11 +154,13 @@ export function getChildConnections(
       // only continue if this connection will be rendered
       return { state } as Connection;
     }
-    const startY = (prevParentState / parent.state) * parent.size + parent.top;
+    const parentTotal = fillTotals?.parent || parent.state;
+    const childTotal = fillTotals?.child(child) || child.state;
+    const startY = (prevParentState / parentTotal) * parent.size + parent.top;
     prevParentState += state;
-    const startSize = Math.max((state / parent.state) * parent.size, 0);
-    const endY = (child.connectedParentState / child.state) * child.size + child.top;
-    const endSize = Math.max((state / child.state) * child.size, 0);
+    const startSize = Math.max((state / parentTotal) * parent.size, 0);
+    const endY = (child.connectedParentState / childTotal) * child.size + child.top;
+    const endSize = Math.max((state / childTotal) * child.size, 0);
 
     child.connectedParentState += state;
 

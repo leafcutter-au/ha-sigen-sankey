@@ -2,7 +2,7 @@
 
 exports[`SankeyChart matches a simple snapshot 1`] = `
 "
-      <sankey-chart-base></sankey-chart-base>
+      <sigen-sankey-base></sigen-sankey-base>
 
       
     "
@@ -11,7 +11,7 @@ exports[`SankeyChart matches a simple snapshot 1`] = `
 exports[`SankeyChart matches a simple snapshot 2`] = `
 "
         <ha-card label="Sankey Chart">
-          <div class=" container " style="height:200px;">
+          <div class=" container " style="height:200px;--sankey-bar-width:15px;--sankey-label-text-color:#ffffff;">
             
     <div class="section" style="">
       <div class="connectors">
@@ -94,12 +94,14 @@ exports[`SankeyChart matches a simple snapshot 2`] = `
       <style>
     ha-card {
         overflow-x: auto;
+        width: 100%;
+        margin: 0;
     }
     .container {
         display: flex;
         position: relative;
         /* height: 210px; */
-        padding: 16px;
+        padding: 8px;
         overflow: hidden;
     }
     .container.with-header {
@@ -113,11 +115,13 @@ exports[`SankeyChart matches a simple snapshot 2`] = `
         flex-direction: column;
         position: relative;
         min-width: 0;
-        max-width: 50%;
+        max-width: 100%;
     }
     .wide .section:last-child {
         flex: initial;
     }
+    /* In Sigenergy mode, let last section expand since labels are on bars */
+
     .vertical .section {
         display: flex;
         flex: initial;
@@ -139,7 +143,7 @@ exports[`SankeyChart matches a simple snapshot 2`] = `
     .box {
         display: flex;
         align-items: center;
-        /* position: relative; */
+        position: relative;
         /* min-height: 1px; */
         transition: height 0.25s;
     }
@@ -158,24 +162,28 @@ exports[`SankeyChart matches a simple snapshot 2`] = `
         opacity: 0.5;
         border-radius: 3px;
     } */
-    .box div:first-child {
+    .box > div:first-child {
         display: flex;
         justify-content: center;
         align-items: center;
         overflow: hidden;
         background-color: var(--primary-color);
-        width: 15px;
+        width: var(--sankey-bar-width, 15px);
         height: 100%;
         cursor: pointer;
+        border-radius: 3px;
     }
-    .vertical .box div:first-child {
+    .visual-style-sigenergy .box > div:first-child {
+        border-radius: var(--sankey-box-radius, 8px);
+    }
+    .vertical .box > div:first-child {
         width: 100%;
-        height: 15px;
+        height: var(--sankey-bar-width, 15px);
     }
-    .box.type-passthrough div:first-child {
+    .box.type-passthrough > div:first-child {
         opacity: 0.4;
     }
-    .box.type-passthrough div.hl:first-child {
+    .box.type-passthrough > div.hl:first-child {
         opacity: 0.85;
     }
     .box .label {
@@ -206,13 +214,13 @@ exports[`SankeyChart matches a simple snapshot 2`] = `
     .connectors {
         position: absolute;
         top: 0;
-        left: 15px;
+        left: var(--sankey-bar-width, 15px);
         right: 0;
         height: 100%;
         overflow: hidden;
     }
     .vertical .connectors {
-        top: 15px;
+        top: var(--sankey-bar-width, 15px);
         left: 0;
         bottom: 0;
         height: auto;
@@ -228,6 +236,132 @@ exports[`SankeyChart matches a simple snapshot 2`] = `
         left: 0;
         width: 100%;
         height: 101%;
+    }
+
+    /* Sigenergy-style label overlay */
+    .visual-style-sigenergy .box .label {
+        position: absolute;
+        left: 0;
+        top: 8px;
+        width: var(--sankey-bar-width, 70px);
+        padding: 0 4px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        z-index: 10;
+        pointer-events: none;
+    }
+
+    .visual-style-sigenergy.vertical .box .label {
+        width: 100%;
+        height: var(--sankey-bar-width, 65px);
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: auto;
+        padding: 4px 8px;
+    }
+
+    .visual-style-sigenergy .box .label .entity-type {
+        font-size: 11px;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+        align-self: center;
+        width: 60px;
+        height: 24px;
+        line-height: 24px;
+        padding: 0 2px;
+        color: var(--sankey-label-text-color, #ffffff);
+        background-color: rgba(255, 255, 255, 0.4);
+        border-radius: 8px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        box-sizing: border-box;
+        text-align: center;
+    }
+
+    .visual-style-sigenergy .box .label .values {
+        text-align: left;
+        padding-left: 8px;
+    }
+        
+    .visual-style-sigenergy .box .label .state {
+        font-size: 15px;
+        font-weight: bold;
+        color: var(--sankey-label-text-color, #ffffff);
+    }
+
+    .visual-style-sigenergy .box .label .unit {
+        font-size: 11px;
+        color: var(--sankey-label-text-color, #ffffff);
+        /* This margin applies when it's a span (inline) next to the state */
+        margin-left: 4px;
+    }
+
+    /* When the unit is a div (block), it's on a new line, so remove the margin */
+    .visual-style-sigenergy .box .label div.unit {
+        margin-left: 0;
+    }
+
+    .visual-style-sigenergy .box .label .percentage {
+        font-size: 11px;
+        margin-top: 4px;
+        color: var(--sankey-label-text-color, #ffffff);
+    }
+
+    .visual-style-sigenergy .box .label .name {
+        display: none; /* Hide custom names in Sigenergy mode */
+    }
+
+    /* Sigenergy horizontal label: every element is placed in JS from the box height */
+    .visual-style-sigenergy .box .label.sig {
+        top: 0;
+        height: 100%;
+        padding: 0;
+        display: block;
+        font-family: var(--sankey-font-family);
+        line-height: 1;
+        color: var(--sankey-label-text-color, #ffffff);
+    }
+    .visual-style-sigenergy .box .label.sig > div {
+        position: absolute;
+        white-space: nowrap;
+        line-height: 1;
+        margin: 0;
+        padding: 0;
+    }
+    .visual-style-sigenergy .box .label.sig .entity-type {
+        font-weight: 400;
+        letter-spacing: 0;
+        text-align: center;
+        box-sizing: border-box;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: var(--sankey-label-text-color, #ffffff);
+    }
+    .visual-style-sigenergy .box .label.sig .state {
+        font-size: inherit;
+        font-weight: 700;
+        letter-spacing: -0.026em;
+    }
+    .visual-style-sigenergy .box .label.sig .unit,
+    .visual-style-sigenergy .box .label.sig .percentage {
+        font-weight: 400;
+        margin: 0;
+    }
+    .visual-style-sigenergy .box .label.sig .inline .state,
+    .visual-style-sigenergy .box .label.sig .inline .unit {
+        font-size: inherit;
+        font-weight: 400;
+        letter-spacing: 0;
+        margin: 0;
+    }
+    .visual-style-sigenergy .box .label.sig .inline .unit {
+        margin-left: 0.06em;
     }
 </style>"
 `;
