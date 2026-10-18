@@ -31,7 +31,7 @@ const hass = mockHass({
   },
 });
 
-const ROOT_TAG = 'sankey-chart';
+const ROOT_TAG = 'sigen-sankey';
 
 describe('SankeyChart', () => {
   let sankeyChart: SankeyChart;
@@ -67,7 +67,7 @@ describe('SankeyChart', () => {
     expect(sankeyChart.shadowRoot?.innerHTML.replace(/<!--.*-->/g, '')).toMatchSnapshot();
 
     // Wait for the sankey-chart-base component to finish updating
-    const sankeyChartBase = sankeyChart.shadowRoot?.querySelector('sankey-chart-base') as LitElement;
+    const sankeyChartBase = sankeyChart.shadowRoot?.querySelector('sigen-sankey-base') as LitElement;
     expect(sankeyChartBase).not.toBeNull();
 
     expect(sankeyChartBase.shadowRoot?.innerHTML.replace(/<!--.*-->/g, '')).toMatchSnapshot();

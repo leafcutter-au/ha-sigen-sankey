@@ -73,7 +73,7 @@ export default css`
         opacity: 0.5;
         border-radius: 3px;
     } */
-    .box div:first-child {
+    .box > div:first-child {
         display: flex;
         justify-content: center;
         align-items: center;
@@ -84,17 +84,17 @@ export default css`
         cursor: pointer;
         border-radius: 3px;
     }
-    .visual-style-sigenergy .box div:first-child {
-        border-radius: 8px;
+    .visual-style-sigenergy .box > div:first-child {
+        border-radius: var(--sankey-box-radius, 8px);
     }
-    .vertical .box div:first-child {
+    .vertical .box > div:first-child {
         width: 100%;
         height: var(--sankey-bar-width, 15px);
     }
-    .box.type-passthrough div:first-child {
+    .box.type-passthrough > div:first-child {
         opacity: 0.4;
     }
-    .box.type-passthrough div.hl:first-child {
+    .box.type-passthrough > div.hl:first-child {
         opacity: 0.85;
     }
     .box .label {
@@ -226,5 +226,52 @@ export default css`
 
     .visual-style-sigenergy .box .label .name {
         display: none; /* Hide custom names in Sigenergy mode */
+    }
+
+    /* Sigenergy horizontal label: every element is placed in JS from the box height */
+    .visual-style-sigenergy .box .label.sig {
+        top: 0;
+        height: 100%;
+        padding: 0;
+        display: block;
+        font-family: var(--sankey-font-family);
+        line-height: 1;
+        color: var(--sankey-label-text-color, #ffffff);
+    }
+    .visual-style-sigenergy .box .label.sig > div {
+        position: absolute;
+        white-space: nowrap;
+        line-height: 1;
+        margin: 0;
+        padding: 0;
+    }
+    .visual-style-sigenergy .box .label.sig .entity-type {
+        font-weight: 400;
+        letter-spacing: 0;
+        text-align: center;
+        box-sizing: border-box;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: var(--sankey-label-text-color, #ffffff);
+    }
+    .visual-style-sigenergy .box .label.sig .state {
+        font-size: inherit;
+        font-weight: 700;
+        letter-spacing: -0.026em;
+    }
+    .visual-style-sigenergy .box .label.sig .unit,
+    .visual-style-sigenergy .box .label.sig .percentage {
+        font-weight: 400;
+        margin: 0;
+    }
+    .visual-style-sigenergy .box .label.sig .inline .state,
+    .visual-style-sigenergy .box .label.sig .inline .unit {
+        font-size: inherit;
+        font-weight: 400;
+        letter-spacing: 0;
+        margin: 0;
+    }
+    .visual-style-sigenergy .box .label.sig .inline .unit {
+        margin-left: 0.06em;
     }
 `;

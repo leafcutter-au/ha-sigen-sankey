@@ -72,6 +72,9 @@ export interface SankeyChartConfig extends LovelaceCardConfig {
   show_entity_labels?: boolean;
   label_text_color?: string;
   label_background_opacity?: number;
+  base_box_size?: number;
+  flow_opacity?: number;
+  font_family?: string;
 }
 
 declare global {
@@ -99,6 +102,7 @@ export interface EntityConfig {
   color_below?: string;
   color_limit?: number;
   url?: string;
+  badge_color?: string;
   tap_action?: ActionConfigExtended;
   double_tap_action?: ActionConfigExtended;
   hold_action?: ActionConfigExtended;
@@ -208,6 +212,7 @@ export interface Box {
   };
   connectedParentState: number;
   percentage?: number;
+  badgeColor?: string;
 }
 
 export interface SectionState {

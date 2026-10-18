@@ -7,6 +7,22 @@ import { FrontendLocaleData, stateIcon } from 'custom-card-helpers';
 import { HassEntity } from 'home-assistant-js-websocket';
 import { renderLabel } from './label';
 
+// Totals of the flows actually connected to a box. Sizing ribbon ends against these fills every box,
+// as in the Sigenergy app, even when measured totals don't balance (inverter losses, rounding).
+// Boxes involved in passthroughs keep the default sizing.
+function fillTotals(
+  parent: Box,
+  connectionsByParent: Map<EntityConfigInternal, ConnectionState[]>,
+  connectionsByChild: Map<EntityConfigInternal, ConnectionState[]>,
+) {
+  const sum = (conns?: ConnectionState[]) =>
+    conns && conns.every(c => !c.passthroughs.length) ? conns.reduce((total, c) => total + c.state, 0) : 0;
+  return {
+    parent: sum(connectionsByParent.get(parent.config)),
+    child: (child: Box) => sum(connectionsByChild.get(child.config)),
+  };
+}
+
 export function renderBranchConnectors(props: {
   section: SectionState;
   nextSection?: SectionState;
@@ -15,8 +31,11 @@ export function renderBranchConnectors(props: {
   connectionsByChild: Map<EntityConfigInternal, ConnectionState[]>;
   allConnections: ConnectionState[];
   vertical: boolean;
+  flowOpacity: number;
+  fill: boolean;
 }): SVGTemplateResult[] {
   const { boxes, size } = props.section;
+  const flowOpacity = props.flowOpacity;
   return boxes
     .filter(b => b.children.length > 0 || b.config.type === 'passthrough')
     .map((b, boxIndex) => {
@@ -25,7 +44,13 @@ export function renderBranchConnectors(props: {
           b.children.some(c => getEntityId(c) === child.entity_id) ||
           (b.config.type === 'passthrough' && b.entity_id === child.entity_id),
       );
-      const connections = getChildConnections(b, children, props.allConnections, props.connectionsByParent).filter(
+      const connections = getChildConnections(
+        b,
+        children,
+        props.allConnections,
+        props.connectionsByParent,
+        props.fill ? fillTotals(b, props.connectionsByParent, props.connectionsByChild) : undefined,
+      ).filter(
         c => {
           return c.state > 0;
         },
@@ -60,7 +85,7 @@ export function renderBranchConnectors(props: {
           return svg`
               <path d="${coords.map(([cmd, x, y]) => `${cmd}${x},${y}`).join(' ')} Z"
                 fill="url(#gradient${props.sectionIndex}.${boxIndex}.${i})" fill-opacity="${
-            c.highlighted ? 0.85 : 0.4
+            c.highlighted ? Math.max(0.85, flowOpacity) : flowOpacity
           }" />
             `;
         })}
@@ -100,7 +125,11 @@ export function renderSection(props: {
     <div class="section" style=${styleMap({ minWidth })}>
       ${hasChildren
         ? html`<div class="connectors">
-            <svg viewBox="${viewBox}" preserveAspectRatio="none">${renderBranchConnectors(props)}</svg>
+            <svg viewBox="${viewBox}" preserveAspectRatio="none">${renderBranchConnectors({
+              ...props,
+              flowOpacity: props.config.flow_opacity ?? (props.config.visual_style === 'sigenergy' ? 0.75 : 0.4),
+              fill: props.config.visual_style === 'sigenergy',
+            })}</svg>
           </div>`
         : null}
       ${boxes.map(box => {

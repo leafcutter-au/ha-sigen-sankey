@@ -1,0 +1,56 @@
+# Proposed card config for views/power.yaml (replaces the current sigen-sankey block).
+# Changes from the live config:
+#  - min_box_size removed: the Sigenergy style now gives every box a base size
+#    (base_box_size, default 13.4% of height) like the app, so small values keep
+#    room for their label without a 70px floor
+#  - colours and text colour sampled from the Sigenergy app
+#  - right-hand order Battery, Load, Grid (the app's order)
+#  - extra flows: Battery -> Grid export, Grid -> Battery (overnight grid charging)
+- type: custom:sigen-sankey
+  view_layout:
+    grid-area: solar4
+  visual_style: sigenergy
+  bar_width: 80
+  show_percentages: true
+  show_entity_labels: true
+  label_text_color: '#252d46'
+  show_names: false
+  show_states: true
+  show_units: true
+  unit_prefix: k
+  round: 2
+  height: 350
+  wide: true
+  min_box_distance: 5
+  layout: horizontal
+  sections:
+    - entities:
+        - entity_id: sensor.sigen_0_total_daily_pv_energy
+          name: SOLAR
+          color: '#a4c971'
+          children:
+            - sensor.sigen_0_daily_charge_energy
+            - sensor.sigen_0_grid_sensor_daily_export_energy
+            - sensor.sigen_0_daily_consumed_energy
+        - entity_id: sensor.sigen_0_daily_discharge_energy
+          name: BATTERY
+          color: '#7fe2df'
+          children:
+            - sensor.sigen_0_daily_consumed_energy
+            - sensor.sigen_0_grid_sensor_daily_export_energy
+        - entity_id: sensor.sigen_0_grid_sensor_daily_import_energy
+          name: GRID
+          color: '#868ef4'
+          children:
+            - sensor.sigen_0_daily_consumed_energy
+            - sensor.sigen_0_daily_charge_energy
+    - entities:
+        - entity_id: sensor.sigen_0_daily_charge_energy
+          name: BATTERY
+          color: '#5a8f92'
+        - entity_id: sensor.sigen_0_daily_consumed_energy
+          name: LOAD
+          color: '#8e56e5'
+        - entity_id: sensor.sigen_0_grid_sensor_daily_export_energy
+          name: GRID
+          color: '#4e51b6'
